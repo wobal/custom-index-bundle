@@ -86,7 +86,7 @@ class CustomIndex
         $sql = self::getDropIndexSql($platform, $indexId);
 
         $st = $con->prepare($sql);
-        return $st->execute();
+        return $st->executeQuery();
     }
 
     /**
@@ -123,9 +123,9 @@ class CustomIndex
                 ->getName();
 
             $sql = self::getCurrentSchemaSql($platform);
-            $st = $con->prepare($sql);
-            $st->execute();
-            $result = $st->fetch();
+            $statement = $con->prepare($sql);
+            $results = $statement->executeQuery();
+            $result = $results->fetchAssociative();
 
             self::$currentSchema = isset($result['current_schema']) ?
                 $result['current_schema'] : null;
@@ -162,11 +162,12 @@ class CustomIndex
             ->getName();
 
         $sql = self::getCurrentIndexSql($platform, $searchInAllSchemas);
-        $st = $con->prepare($sql);
-        $st->execute([self::PREFIX . '%']);
-
+        $statement = $con->prepare($sql);
+        $value = self::PREFIX . '%';
+        $statement->bindParam(1,$value);
+        $results = $statement->executeQuery();
         $result = [];
-        if ($data = $st->fetchAll()) {
+        if ($data = $results->fetchallAssociative()) {
             foreach ($data as $row) {
                 $result[] = $row['relname'];
             }
@@ -250,7 +251,7 @@ class CustomIndex
 
         $sql = $this->getCreateIndexSql($platform);
         $st = $con->prepare($sql);
-        $result = $st->execute();
+        $result = $st->executeQuery();
 
         return $result;
     }
